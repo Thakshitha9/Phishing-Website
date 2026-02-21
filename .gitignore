@@ -1,7 +1,11 @@
 # Byte-compiled / optimized / DLL files
+venv/
 __pycache__/
-*.py[codz]
-*$py.class
+*.pyc
+model/*.h5
+model/*.pkl
+*.db
+.env
 
 # C extensions
 *.so

@@ -10,32 +10,52 @@
     <h1>🔐 Phishing Website Detection System</h1>
     <p class="subtitle">Machine Learning Based Cyber Security Tool</p>
 
-    <form action="/predict" method="post" class="form-box">
-        <input type="text" name="url" 
-               placeholder="Enter Website URL (e.g., https://example.com)" required>
-        <button type="submit">Analyze Website</button>
-    </form>
+   <form action="{{ url_for('predict') }}" method="POST">
+    <input type="text" name="url" placeholder="Enter URL">
+    <button type="submit">Check</button>
+</form>
 
     {% if prediction_text %}
-        <div class="result 
-            {% if 'Phishing' in prediction_text %}
-                danger
-            {% else %}
-                safe
-            {% endif %}
-        ">
-            {{ prediction_text }}
-        </div>
-    {% endif %}
+    <div class="result-box 
+        {% if 'Phishing' in prediction_text %}
+            danger
+        {% else %}
+            safe
+        {% endif %}
+    ">
+        {{ prediction_text }}
+    </div>
+{% endif %}
+{% if confidence %}
+    <div class="confidence-box">
+        Confidence: {{ confidence }}%
+    </div>
+{% endif %}
 
-    
+    {% if rf_result %}
+<div class="result-box">
+    <h3>Random Forest Prediction</h3>
+    <p>{{ rf_result }}</p>
+    <p>Confidence: {{ rf_confidence }}%</p>
+</div>
+
+<div class="result-box">
+    <h3>Deep Learning Prediction</h3>
+    <p>{{ dl_result }}</p>
+    <p>Confidence: {{ dl_confidence }}%</p>
+</div>
+{% endif %}
 
     <br>
-    <a href="/history" class="history-btn">View Prediction History</a>
     <br><br>
-    <a href="/dashboard" class="history-btn">View Analytics Dashboard</a>
+    <a href="/login" class="history-btn">Admin Dashboard</a>
 
 </div>
 
+<footer>
+    © 2026 Phishing Website Detection System <br>
+    Developed by Thakshitha Vankadhara Sai
+</footer>
 </body>
 </html>
+

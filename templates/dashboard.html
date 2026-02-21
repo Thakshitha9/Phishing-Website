@@ -5,64 +5,138 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
 
+<div class="admin-nav">
+    <a href="/history">History</a>
+    <a href="/logout">Logout</a>
+</div>
+
 <div class="container">
+
     <h1>📊 Security Analytics Dashboard</h1>
 
+    <!-- ========================= -->
+    <!-- TOP METRIC CARDS -->
+    <!-- ========================= -->
+
     <div class="dashboard-grid">
-        <div class="card total">
-            <h2>Total Predictions</h2>
-            <p>{{ total }}</p>
+
+        <div class="card">
+            <h3>Total Predictions</h3>
+            <p id="total" class="count">{{ total }}</p>
         </div>
 
-        <div class="card legit">
-            <h2>Legitimate Websites</h2>
-            <p>{{ legit_count }}</p>
+        <div class="card">
+            <h3>RF Phishing</h3>
+            <p id="rf_phishing" class="count">{{ rf_phishing }}</p>
         </div>
 
-        <div class="card phishing">
-            <h2>Phishing Websites</h2>
-            <p>{{ phishing_count }}</p>
+        <div class="card">
+            <h3>DL Phishing</h3>
+            <p id="dl_phishing" class="count">{{ dl_phishing }}</p>
         </div>
 
-        <div class="card percentage">
-            <h2>Phishing Percentage</h2>
-            <p>{{ phishing_percentage }}%</p>
+        <div class="card">
+            <h3>Model Disagreements</h3>
+            <p id="disagreements" class="count">{{ disagreements }}</p>
         </div>
+
+        <div class="card">
+            <h3>RF Accuracy</h3>
+            <p class="count">{{ rf_accuracy }}%</p>
+        </div>
+
+        <div class="card">
+            <h3>DL Accuracy</h3>
+            <p class="count">{{ dl_accuracy }}%</p>
+        </div>
+
     </div>
 
-    <div class="chart-container">
-        <canvas id="phishingChart"></canvas>
+    <!-- ========================= -->
+    <!-- BAR CHART -->
+    <!-- ========================= -->
+
+    <div style="width: 700px; margin: 60px auto;">
+        <h2 style="text-align:center;">Model Comparison</h2>
+        <canvas id="comparisonChart"></canvas>
+    </div>
+
+    <!-- ========================= -->
+    <!-- PIE CHART -->
+    <!-- ========================= -->
+
+    <div style="width: 500px; margin: 60px auto;">
+        <h2 style="text-align:center;">Phishing Distribution</h2>
+        <canvas id="pieChart"></canvas>
     </div>
 
     <br>
-    <a href="/">⬅ Back to Home</a>
+    <a href="/" class="back-btn">⬅ Back to Home</a>
+
 </div>
 
 <script>
-    const ctx = document.getElementById('phishingChart').getContext('2d');
+let barChart;
+let pieChart;
 
-    const phishingChart = new Chart(ctx, {
-        type: 'pie',
+window.onload = function() {
+
+    const barCtx = document.getElementById('comparisonChart').getContext('2d');
+    const pieCtx = document.getElementById('pieChart').getContext('2d');
+
+    barChart = new Chart(barCtx, {
+        type: 'bar',
         data: {
-            labels: ['Legitimate', 'Phishing'],
+            labels: ['Random Forest', 'Deep Learning'],
             datasets: [{
-                data: [{{ legit_count }}, {{ phishing_count }}],
-                backgroundColor: ['#16a34a', '#dc2626']
+                label: 'Phishing Count',
+                data: [{{ rf_phishing }}, {{ dl_phishing }}],
+                backgroundColor: ['#ef4444', '#6366f1']
             }]
         },
-        options: {
-            plugins: {
-                legend: {
-                    labels: {
-                        color: 'white'
-                    }
-                }
-            }
+        options: { responsive: true }
+    });
+
+    pieChart = new Chart(pieCtx, {
+        type: 'pie',
+        data: {
+            labels: ['RF Phishing', 'DL Phishing'],
+            datasets: [{
+                data: [{{ rf_phishing }}, {{ dl_phishing }}],
+                backgroundColor: ['#ef4444', '#6366f1']
+            }]
         }
     });
+
+    setInterval(updateDashboard, 10000);
+};
+
+function updateDashboard(){
+    fetch('/dashboard-data')
+    .then(response => response.json())
+    .then(data => {
+
+        document.getElementById('total').innerText = data.total;
+        document.getElementById('rf_phishing').innerText = data.rf_phishing;
+        document.getElementById('dl_phishing').innerText = data.dl_phishing;
+        document.getElementById('disagreements').innerText = data.disagreements;
+
+        barChart.data.datasets[0].data = [data.rf_phishing, data.dl_phishing];
+        barChart.update();
+
+        pieChart.data.datasets[0].data = [data.rf_phishing, data.dl_phishing];
+        pieChart.update();
+    });
+}
 </script>
+
+<footer>
+    © 2026 Phishing Website Detection System <br>
+    Developed by Sai Thakshitha Vankadhara
+</footer>
 
 </body>
 </html>

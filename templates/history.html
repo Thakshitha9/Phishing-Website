@@ -9,31 +9,55 @@
 <div class="container">
     <h1>📊 Prediction History</h1>
 
-    <table class="history-table">
-        <tr>
-            <th>ID</th>
-            <th>Result</th>
-            <th>Timestamp</th>
-        </tr>
+    <div class="table-wrapper">
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>URL</th>
+                    <th>RF Result</th>
+                    <th>RF Confidence</th>
+                    <th>DL Result</th>
+                    <th>DL Confidence</th>
+                    <th>Timestamp</th>
+                </tr>
+            </thead>
 
-        {% for row in records %}
-        <tr>
-            <td>{{ row[0] }}</td>
-            <td>
-                {% if 'Phishing' in row[1] %}
-                    <span class="danger-text">{{ row[1] }}</span>
-                {% else %}
-                    <span class="safe-text">{{ row[1] }}</span>
-                {% endif %}
-            </td>
-            <td>{{ row[2] }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+            <tbody>
+            {% for row in records %}
+                <tr>
+                    <td>{{ row[0] }}</td>
+                    <td class="url-cell">{{ row[1] }}</td>
+
+                    <td class="{{ 'phishing' if row[2]=='Phishing' else 'legit' }}">
+                        {{ row[2] }}
+                    </td>
+
+                    <td>{{ row[3] }}%</td>
+
+                    <td class="{{ 'phishing' if row[4]=='Phishing' else 'legit' }}">
+                        {{ row[4] }}
+                    </td>
+
+                    <td>{{ row[5] }}%</td>
+
+                    <td>{{ row[6] }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
     <br>
-    <a href="/">⬅ Back to Home</a>
+    <a href="/dashboard" class="back-btn">⬅ Back to Dashboard</a>
 </div>
+
+
+
+<footer>
+    © 2026 Phishing Website Detection System <br>
+    Developed by Sai Thakshitha Vankadhara
+</footer>
 
 </body>
 </html>
