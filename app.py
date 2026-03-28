@@ -12,7 +12,7 @@ app.secret_key = "supersecretkey"
 # Load Models
 # ----------------------------
 rf_model = pickle.load(open("model/phishing_model.pkl", "rb"))
-dl_model = load_model("model/deep_phishing_model.h5")
+dl_model = load_model("model/deep_phishing_model.keras")   # ✅ FIX: changed .h5 → .keras
 
 # Load saved accuracies
 try:
@@ -41,63 +41,67 @@ def get_db_connection():
     )
 
 # ----------------------------
-# Home
+# Home  ✅ FIX: now calls real ML models instead of dummy "https" logic
 # ----------------------------
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def home():
-    return render_template("index.html")
-
-# ----------------------------
-# Prediction Route (IMPORTANT)
-# ----------------------------
-@app.route('/predict', methods=['POST'])
-def predict():
-    try:
+    if request.method == 'POST':
         url = request.form.get('url')
 
         if not url:
             return render_template("index.html", prediction_text="Please enter a URL")
 
-        # Feature extraction
-        features = extract_features(url)
-        final_features = np.array([features]).astype(float)
+        try:
+            # Feature extraction
+            features = extract_features(url)
+            final_features = np.array([features]).astype(float)
 
-        # Random Forest Prediction
-        rf_prediction = rf_model.predict(final_features)
-        rf_prob = rf_model.predict_proba(final_features)
-        rf_confidence = round(max(rf_prob[0]) * 100, 2)
-        rf_result = "Phishing" if rf_prediction[0] == 1 else "Legitimate"
+            # Random Forest Prediction
+            rf_prediction = rf_model.predict(final_features)
+            rf_prob = rf_model.predict_proba(final_features)
+            rf_confidence = round(max(rf_prob[0]) * 100, 2)
+            rf_result = "Phishing" if rf_prediction[0] == 1 else "Legitimate"
 
-        # Deep Learning Prediction
-        dl_prediction = dl_model.predict(final_features)
-        dl_confidence = round(float(dl_prediction[0][0]) * 100, 2)
-        dl_result = "Phishing" if dl_prediction[0][0] > 0.5 else "Legitimate"
+            # Deep Learning Prediction
+            dl_prediction = dl_model.predict(final_features)
+            dl_confidence = round(float(dl_prediction[0][0]) * 100, 2)
+            dl_result = "Phishing" if dl_prediction[0][0] > 0.5 else "Legitimate"
 
-        # Save to Database
-        db = get_db_connection()
-        cursor = db.cursor()
+            # Final combined result (majority vote)
+            if rf_result == "Phishing" or dl_result == "Phishing":
+                prediction_text = "⚠️ Phishing Website Detected!"
+            else:
+                prediction_text = "✅ Safe Website"
 
-        cursor.execute("""
-            INSERT INTO predictions
-            (url, rf_result, rf_confidence, dl_result, dl_confidence)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (url, rf_result, rf_confidence, dl_result, dl_confidence))
+            avg_confidence = round((rf_confidence + dl_confidence) / 2, 2)
 
-        db.commit()
-        cursor.close()
-        db.close()
+            # Save to Database
+            db = get_db_connection()
+            cursor = db.cursor()
+            cursor.execute("""
+                INSERT INTO predictions
+                (url, rf_result, rf_confidence, dl_result, dl_confidence)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (url, rf_result, rf_confidence, dl_result, dl_confidence))
+            db.commit()
+            cursor.close()
+            db.close()
 
-        return render_template(
-            "index.html",
-            rf_result=rf_result,
-            rf_confidence=rf_confidence,
-            dl_result=dl_result,
-            dl_confidence=dl_confidence
-        )
+            return render_template(
+                "index.html",
+                prediction_text=prediction_text,
+                confidence=avg_confidence,
+                rf_result=rf_result,
+                rf_confidence=rf_confidence,
+                dl_result=dl_result,
+                dl_confidence=dl_confidence
+            )
 
-    except Exception as e:
-        print("Error:", e)
-        return render_template("index.html", prediction_text="Error in prediction")
+        except Exception as e:
+            print("Prediction Error:", e)
+            return render_template("index.html", prediction_text=f"Error: {str(e)}")
+
+    return render_template('index.html')
 
 # ----------------------------
 # Login
@@ -155,7 +159,7 @@ def dashboard():
         rf_accuracy=rf_accuracy,
         dl_accuracy=dl_accuracy
     )
-    
+
 # ----------------------------
 # History Page
 # ----------------------------
@@ -175,7 +179,6 @@ def history():
     """)
 
     records = cursor.fetchall()
-
     cursor.close()
     db.close()
 

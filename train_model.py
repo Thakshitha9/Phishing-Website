@@ -26,11 +26,19 @@ model.fit(X_train, y_train)
 
 # Evaluate
 y_pred = model.predict(X_test)
-accuracy = accuracy_score(y_test, y_pred)
-
-print("Model Accuracy:", accuracy)
+rf_accuracy = round(accuracy_score(y_test, y_pred) * 100, 2)
+print("Model Accuracy:", rf_accuracy, "%")
 
 # Save model
 pickle.dump(model, open("model/phishing_model.pkl", "wb"))
+print("Random Forest model saved!")
 
-print("Custom model trained and saved successfully!")
+# ✅ FIX: Save accuracy to metrics.pkl so dashboard can display it
+try:
+    metrics_data = pickle.load(open("model/metrics.pkl", "rb"))
+except:
+    metrics_data = {}
+
+metrics_data["rf_accuracy"] = rf_accuracy
+pickle.dump(metrics_data, open("model/metrics.pkl", "wb"))
+print("RF accuracy saved to metrics.pkl:", rf_accuracy, "%")

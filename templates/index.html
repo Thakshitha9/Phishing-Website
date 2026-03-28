@@ -4,58 +4,66 @@
     <title>Phishing Website Detection</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
 
 <div class="container">
-    <h1>🔐 Phishing Website Detection System</h1>
-    <p class="subtitle">Machine Learning Based Cyber Security Tool</p>
+    <div class="card">
 
-   <form action="{{ url_for('predict') }}" method="POST">
-    <input type="text" name="url" placeholder="Enter URL">
-    <button type="submit">Check</button>
-</form>
+        <h1>🔐 Phishing Website Detection</h1>
+        <p class="subtitle">Enter a URL to check if it's safe</p>
 
-    {% if prediction_text %}
-    <div class="result-box 
-        {% if 'Phishing' in prediction_text %}
-            danger
-        {% else %}
-            safe
+        <!-- FORM -->
+        <form method="POST">
+            <input type="text" name="url" placeholder="Enter website URL..." required>
+            <button type="submit">Check URL</button>
+        </form>
+
+        <!-- MAIN RESULT -->
+        {% if prediction_text %}
+        <div class="result-box 
+            {% if 'Phishing' in prediction_text %}
+                danger
+            {% else %}
+                safe
+            {% endif %}
+        ">
+            {{ prediction_text }}
+        </div>
         {% endif %}
-    ">
-        {{ prediction_text }}
+
+        <!-- CONFIDENCE -->
+        {% if confidence %}
+        <div class="confidence-box">
+            Confidence: {{ confidence }}%
+        </div>
+        {% endif %}
+
+        <!-- MODEL COMPARISON -->
+        {% if rf_result %}
+        <div class="result-box">
+            <h3>Random Forest</h3>
+            <p>{{ rf_result }}</p>
+            <p>Confidence: {{ rf_confidence }}%</p>
+        </div>
+
+        <div class="result-box">
+            <h3>Deep Learning</h3>
+            <p>{{ dl_result }}</p>
+            <p>Confidence: {{ dl_confidence }}%</p>
+        </div>
+        {% endif %}
+
+        <!-- ADMIN BUTTON -->
+        <a href="/login" class="history-btn">Admin Dashboard</a>
+
     </div>
-{% endif %}
-{% if confidence %}
-    <div class="confidence-box">
-        Confidence: {{ confidence }}%
-    </div>
-{% endif %}
-
-    {% if rf_result %}
-<div class="result-box">
-    <h3>Random Forest Prediction</h3>
-    <p>{{ rf_result }}</p>
-    <p>Confidence: {{ rf_confidence }}%</p>
-</div>
-
-<div class="result-box">
-    <h3>Deep Learning Prediction</h3>
-    <p>{{ dl_result }}</p>
-    <p>Confidence: {{ dl_confidence }}%</p>
-</div>
-{% endif %}
-
-    <br>
-    <br><br>
-    <a href="/login" class="history-btn">Admin Dashboard</a>
-
 </div>
 
 <footer>
     © 2026 Phishing Website Detection System <br>
     Developed by Thakshitha Vankadhara Sai
 </footer>
+
 </body>
 </html>
-

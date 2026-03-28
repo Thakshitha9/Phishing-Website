@@ -6,7 +6,6 @@ from sklearn.model_selection import train_test_split
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 
-#es
 # Load dataset
 df = pd.read_csv("dataset/custom_urls.csv")
 
@@ -19,11 +18,12 @@ df["label"] = df["label"].astype(int)
 # Extract features
 X = []
 for url in df["url"]:
-    X.append(extract_features(url))   # ← This line must be indented
+    X.append(extract_features(url))
 
 # Convert to numpy arrays
 X = np.array(X).astype(float)
 y = df["label"].values
+
 # Train-test split
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42
@@ -44,7 +44,19 @@ model.fit(X_train, y_train, epochs=50, batch_size=8, verbose=1)
 
 # Evaluate
 loss, accuracy = model.evaluate(X_test, y_test)
-print("Deep Learning Accuracy:", accuracy)
+dl_accuracy = round(accuracy * 100, 2)
+print("Deep Learning Accuracy:", dl_accuracy, "%")
 
-# Save model
+# ✅ FIX: Save model as .keras (consistent with app.py)
 model.save("model/deep_phishing_model.keras")
+print("Deep learning model saved as deep_phishing_model.keras")
+
+# ✅ FIX: Save accuracy to metrics.pkl so dashboard can display it
+try:
+    metrics_data = pickle.load(open("model/metrics.pkl", "rb"))
+except:
+    metrics_data = {}
+
+metrics_data["dl_accuracy"] = dl_accuracy
+pickle.dump(metrics_data, open("model/metrics.pkl", "wb"))
+print("DL accuracy saved to metrics.pkl:", dl_accuracy, "%")
